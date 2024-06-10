@@ -9,16 +9,14 @@ import mongoose from 'mongoose'
 import { error } from 'console'
 import dotenv from 'dotenv'
 import crypto from  'crypto'
-import { RegisterRouter, logInRouter } from './router/authRouter'
+import { RegisterRouter, logInRouter, post, post2 } from './router/authRouter'
 
 
  
 const app = express()
 dotenv.config()
 
-app.use(cors({
-credentials:true
-}))
+app.use(cors({}))
 
 const userName = process.env.USER_NAME
 const password = process.env.PASSWORD
@@ -29,8 +27,11 @@ app.use(cookieParser())
 app.use(BodyParser.json())
 
 
-app.use('/auth', logInRouter)
 app.use('/auth', RegisterRouter)
+app.use('/auth', logInRouter)
+app.use('/test', post)
+app.use('/test', post2)
+
 
 
 const server = http.createServer(app)
