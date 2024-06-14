@@ -1,13 +1,20 @@
 import express from 'express';
-import { createUser, getUsersByEmail } from '../db/users';
+import { createUser, getUsers, getUsersByEmail } from '../db/users';
 import { authentication, random } from '../helpers';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { UserInfo } from 'os';
 
 dotenv.config();
 
+export interface userData{
+    firstName:string,
+    lastName:string,
+    email:string,
+    accessToken:string
+}
 const JWT_SECRET = process.env.JWT_SECRET || '';
-
+// const createdAt= Date.now()
 export const registerController = async (req: express.Request, res: express.Response) => {
     try {
         const { firstName, lastName, email, password } = req.body;
@@ -40,10 +47,18 @@ export const registerController = async (req: express.Request, res: express.Resp
         const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '10h' });
         res.cookie('session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
 
+      
         return res.status(200).json({
             status: '200',
-            message: 'Registration is successful',
-            user
+            message: 'Registration successful',
+            user:{
+            firstName:user.firstName,
+            lastName:user.lastName,
+            email:user.email,
+            accessToken:token,
+            createdAt:user.createdAt,
+            updatedAt:user.updatedAt
+            }
         }).end();
     } catch (error:any) {
         console.error(error);
@@ -64,7 +79,7 @@ export const logInController = async (req: express.Request, res: express.Respons
             });
         }
 
-        const user = await getUsersByEmail(email);
+        const user = await getUsersByEmail(email).select('+authentication.salt +authentication.password');
         if (!user) {
             return res.status(403).json({
                 status: '403',
@@ -72,21 +87,34 @@ export const logInController = async (req: express.Request, res: express.Respons
             });
         }
 
-        const expectedHash = authentication(user?.authentication?.salt, password);
-        if (user?.authentication?.password !== expectedHash) {
+        const expectedHash = authentication(user.authentication?.salt, password);
+        if (user.authentication?.password !== expectedHash) {
             return res.status(403).json({
                 status: '403',
                 error: 'Invalid email or password'
             });
         }
+        const salt = random()
+        user.authentication.sessionToken= authentication(salt, user._id.toString())
+         await user.save()
 
         const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '10h' });
-        res.cookie('session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
-
+        res.cookie('session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' , domain:'localhost'});
+    
+         
+        
         return res.status(200).json({
             status: '200',
-            message: 'Login successful'
-        });
+            message: 'Login successful',
+            user:{
+            firstName:user.firstName,
+            lastName:user.lastName,
+            email:user.email,
+            accessToken:token,
+            createdAt:user.createdAt,
+            updatedAt:user.updatedAt
+            }
+        }).end();
     } catch (error:any) {
         console.error(error);
         return res.status(400).json({
@@ -113,3 +141,37 @@ export const testController2 = async (req: express.Request, res: express.Respons
         }
     });
 };
+2
+export const getUsersController =async(req:express.Request, res:express.Response)=>{
+    const users:any = await getUsers()
+    try {
+       const userDetails = users?.map((user:userData, index:number)=>({
+        id:index,
+        firstName:user.firstName,
+        lastName:user.lastName,
+        email:user.email
+        }))
+        res.status(200).json({
+            body:{
+            numberOfUsers:users.length,
+            users:userDetails
+            }
+        }
+        )
+        
+    } catch (error:any) {
+        console.error(error)
+        if(error.message){
+            return res.status(400).json({
+                status:'400',
+                error:error.message
+            }) 
+        }
+            return res.status(400).json({
+                status:'400',
+                error:'there is an error'
+            }) 
+        
+
+    }
+}

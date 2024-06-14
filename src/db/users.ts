@@ -7,8 +7,10 @@ const userSchema = new mongoose.Schema({
     authentication: {
         password: { type: String, required: true },
         salt: { type: String, select: false },
-        sessionToken: { type: String, select: false }
-    }
+        sessionToken: { type: String, select: false },
+    },
+}, {
+    timestamps:true
 });
 
 export const userModel = mongoose.model('User', userSchema);

@@ -9,8 +9,12 @@ import mongoose from 'mongoose'
 import { error } from 'console'
 import dotenv from 'dotenv'
 import crypto from  'crypto'
-import { RegisterRouter, logInRouter, post, post2 } from './router/authRouter'
+import { RegisterRouter, logInRouter, post, post2, userRouter } from './router/authRouter'
+import { measureExcustionTime, randomNumbers } from './helpers'
 
+
+const randomized = randomNumbers()
+measureExcustionTime(randomNumbers)
 
  
 const app = express()
@@ -31,6 +35,7 @@ app.use('/auth', RegisterRouter)
 app.use('/auth', logInRouter)
 app.use('/test', post)
 app.use('/test', post2)
+app.use('/user', userRouter)
 
 
 
@@ -58,6 +63,8 @@ if(mongoose.connection){
     console.log('conected to database..');
     
 }
+
+
 
 server.listen(port, ()=>{
     console.log(`server is running on ${port}`);
