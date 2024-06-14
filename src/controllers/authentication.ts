@@ -7,12 +7,7 @@ import { UserInfo } from 'os';
 
 dotenv.config();
 
-export interface userData{
-    firstName:string,
-    lastName:string,
-    email:string,
-    accessToken:string
-}
+
 const JWT_SECRET = process.env.JWT_SECRET || '';
 // const createdAt= Date.now()
 export const registerController = async (req: express.Request, res: express.Response) => {
@@ -141,37 +136,4 @@ export const testController2 = async (req: express.Request, res: express.Respons
         }
     });
 };
-2
-export const getUsersController =async(req:express.Request, res:express.Response)=>{
-    const users:any = await getUsers()
-    try {
-       const userDetails = users?.map((user:userData, index:number)=>({
-        id:index,
-        firstName:user.firstName,
-        lastName:user.lastName,
-        email:user.email
-        }))
-        res.status(200).json({
-            body:{
-            numberOfUsers:users.length,
-            users:userDetails
-            }
-        }
-        )
-        
-    } catch (error:any) {
-        console.error(error)
-        if(error.message){
-            return res.status(400).json({
-                status:'400',
-                error:error.message
-            }) 
-        }
-            return res.status(400).json({
-                status:'400',
-                error:'there is an error'
-            }) 
-        
 
-    }
-}

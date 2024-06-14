@@ -9,33 +9,30 @@ import mongoose from 'mongoose'
 import { error } from 'console'
 import dotenv from 'dotenv'
 import crypto from  'crypto'
-import { RegisterRouter, logInRouter, post, post2, userRouter } from './router/authRouter'
+import { RegisterRouter, createRouter, logInRouter, post, post2, userRouter } from './router/authRouter'
 import { measureExcustionTime, randomNumbers } from './helpers'
+import { isAuthenticated } from './middlewares'
 
 
 const randomized = randomNumbers()
-measureExcustionTime(randomNumbers)
-
- 
-const app = express()
-dotenv.config()
-
-app.use(cors({}))
-
 const userName = process.env.USER_NAME
 const password = process.env.PASSWORD
 
+// measureExcustionTime(randomNumbers)
+
  
+const app = express()
+const router = createRouter()
+dotenv.config()
+
+
+
+app.use(cors({}))
 app.use(compression())
 app.use(cookieParser())
+app.use(router)
 app.use(BodyParser.json())
 
-
-app.use('/auth', RegisterRouter)
-app.use('/auth', logInRouter)
-app.use('/test', post)
-app.use('/test', post2)
-app.use('/user', userRouter)
 
 
 
