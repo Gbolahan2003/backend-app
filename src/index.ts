@@ -22,16 +22,17 @@ const password = process.env.PASSWORD
 
  
 const app = express()
+
 const router = createRouter()
 dotenv.config()
 
 
 
+app.use(cookieParser())
 app.use(cors({}))
 app.use(compression())
-app.use(cookieParser())
-app.use(router)
 app.use(BodyParser.json())
+app.use(router)
 
 
 

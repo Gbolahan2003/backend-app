@@ -5,3 +5,9 @@ export interface userData{
     email:string,
     accessToken:string
 }
+
+
+export interface user {
+    user:userData
+}
+

@@ -64,9 +64,10 @@ export const registerController = async (req: express.Request, res: express.Resp
     }
 };
 
-export const logInController = async (req: express.Request, res: express.Response) => {
+export const logInController = async (req:express.Request, res:express.Response) => {
     try {
         const { email, password } = req.body;
+        
         if (!email || !password) {
             return res.status(400).json({
                 status: '400',
@@ -102,6 +103,7 @@ export const logInController = async (req: express.Request, res: express.Respons
             status: '200',
             message: 'Login successful',
             user:{
+                id:user.id,
             firstName:user.firstName,
             lastName:user.lastName,
             email:user.email,
@@ -112,8 +114,8 @@ export const logInController = async (req: express.Request, res: express.Respons
         }).end();
     } catch (error:any) {
         console.error(error);
-        return res.status(400).json({
-            status: '400',
+        return res.status(500).json({
+            status: '500',
             message: error.message || 'Error occurred'
         });
     }
@@ -136,4 +138,3 @@ export const testController2 = async (req: express.Request, res: express.Respons
         }
     });
 };
-
