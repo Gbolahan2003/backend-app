@@ -1,11 +1,15 @@
-import express from 'express';
+import express,{Request} from 'express';
 import { createUser, deleteUserById, getUserBySessionToken, getUsers, getUsersByEmail, getUsersById } from '../db/users';
-import { authentication, random } from '../helpers';
+// import { authentication, random } from '../helpers';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { UserInfo } from 'os';
 import { userData } from '../interface';
 import { errorHandler } from '../helpers/errorHandler';
+
+interface authRequest extends Request {
+    payload?:any
+}
 
 export const getUsersController =async(req:express.Request, res:express.Response)=>{
     const users:any = await getUsers()
@@ -15,7 +19,8 @@ export const getUsersController =async(req:express.Request, res:express.Response
         user_id:index,
         firstName:user.firstName,
         lastName:user.lastName,
-        email:user.email
+        email:user.email,
+        refreshToken:user.refreshToken
         }))
         res.status(200).json({
             body:{
@@ -60,11 +65,11 @@ res.status(400).json({
 }
 }
 
-export const getUserById =async(req:express.Request, res:express.Response)=>{
+export const getUserById =async(req:authRequest, res:express.Response)=>{
     try {
-
-        const {id} = req.params
-
+        
+        // const {id} = req.params
+        const {id} = req.payload
   
         const user = await  getUsersById(id)
         

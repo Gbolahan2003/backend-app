@@ -1,15 +1,15 @@
 import express from 'express';
-import { createUser, getUsers, getUsersByEmail } from '../db/users';
-import { authentication, random } from '../helpers';
+import { createUser, getUsersByEmail, userModel } from '../db/users';
+import { authentication, generateAccessToken, generaterefreshToken, random } from '../helpers';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { UserInfo } from 'os';
+import { errorHandler } from '../helpers/errorHandler';
 
 dotenv.config();
 
-
 const JWT_SECRET = process.env.JWT_SECRET || '';
-// const createdAt= Date.now()
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || '';
+
 export const registerController = async (req: express.Request, res: express.Response) => {
     try {
         const { firstName, lastName, email, password } = req.body;
@@ -29,33 +29,43 @@ export const registerController = async (req: express.Request, res: express.Resp
         }
 
         const salt = random();
-        const user = await createUser({
+        const hashedPassword = authentication(salt, password);
+
+        const user:any = await createUser({
             firstName,
             lastName,
             email,
             authentication: {
                 salt,
-                password: authentication(salt, password)
+                password: hashedPassword,
+                sessionToken: '',
+                refreshToken: ''
             }
         });
 
         const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '10h' });
+        const refreshToken = generaterefreshToken({ id: user._id, email: user.email });
+
+        user.authentication.sessionToken = token;
+        user.authentication.refreshToken = refreshToken;
+        await user.save();
+
         res.cookie('session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
 
-      
         return res.status(200).json({
             status: '200',
             message: 'Registration successful',
-            user:{
-            firstName:user.firstName,
-            lastName:user.lastName,
-            email:user.email,
-            accessToken:token,
-            createdAt:user.createdAt,
-            updatedAt:user.updatedAt
+            user: {
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                sessionToken: token,
+                refreshToken: refreshToken,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
             }
         }).end();
-    } catch (error:any) {
+    } catch (error: any) {
         console.error(error);
         return res.status(400).json({
             status: '400',
@@ -64,10 +74,10 @@ export const registerController = async (req: express.Request, res: express.Resp
     }
 };
 
-export const logInController = async (req:express.Request, res:express.Response) => {
+export const logInController = async (req: express.Request, res: express.Response) => {
     try {
         const { email, password } = req.body;
-        
+
         if (!email || !password) {
             return res.status(400).json({
                 status: '400',
@@ -90,29 +100,33 @@ export const logInController = async (req:express.Request, res:express.Response)
                 error: 'Invalid email or password'
             });
         }
-        const salt = random()
-        user.authentication.sessionToken= authentication(salt, user._id.toString())
-         await user.save()
+
+        const salt = random();
+        const sessionToken = authentication(salt, user._id.toString());
+        user.authentication.sessionToken = sessionToken;
+
+        const refreshToken = generaterefreshToken({ id: user._id, email: user.email });
+        user.authentication.refreshToken = refreshToken;
+        await user.save();
 
         const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '10h' });
-        res.cookie('session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' , domain:'localhost'});
-    
-         
-        
+        res.cookie('session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', domain: 'localhost' });
+
         return res.status(200).json({
             status: '200',
             message: 'Login successful',
-            user:{
-                id:user.id,
-            firstName:user.firstName,
-            lastName:user.lastName,
-            email:user.email,
-            accessToken:token,
-            createdAt:user.createdAt,
-            updatedAt:user.updatedAt
+            user: {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                sessionToken: token,
+                refreshToken: refreshToken,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
             }
         }).end();
-    } catch (error:any) {
+    } catch (error: any) {
         console.error(error);
         return res.status(500).json({
             status: '500',
@@ -121,20 +135,36 @@ export const logInController = async (req:express.Request, res:express.Response)
     }
 };
 
-export const testController = async (req: express.Request, res: express.Response) => {
-    return res.status(201).json({
-        message: 'Testing',
-        body: {
-            hi: 'hi'
+export const refreshTokenController = async (req: express.Request, res: express.Response) => {
+    try {
+        const { refreshToken } = req.cookies;
+        if (!refreshToken) {
+            return res.status(401).json({ message: 'Refresh token is required' });
         }
-    });
-};
 
-export const testController2 = async (req: express.Request, res: express.Response) => {
-    return res.status(201).json({
-        message: 'Testing for the second time',
-        body: {
-            hi: 'hi'
+        const payload = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as any;
+        const user = await userModel.findById(payload.id);
+        if (!user || user.authentication?.refreshToken !== refreshToken) {
+            return res.status(403).json({ message: 'Invalid refresh token' });
         }
-    });
+
+        const newAccessToken = generateAccessToken({ id: user._id, email: user.email });
+        const newRefreshToken = generaterefreshToken({ id: user._id, email: user.email });
+
+        if (user.authentication) {
+            user.authentication.refreshToken = newRefreshToken;
+        }
+        await user.save();
+
+        res.cookie('session', newAccessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+
+        return res.status(200).json({
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken
+        });
+
+    } catch (error) {
+        errorHandler(error, req, res);
+        console.log(error);
+    }
 };

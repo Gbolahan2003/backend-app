@@ -2,13 +2,16 @@ import { Request, Response } from "express";
 import { UpdateTodoById, deleteTodoById, getTodo, toDoModel } from "../db/toDoList";
 import { errorHandler } from "../helpers/errorHandler";
 import { error } from "console";
+interface AuthenticatedRequest extends Request {
+    payload?: any;
+  }
 
-export const createToDoController =async(req:Request, res:Response)=>{
+export const createToDoController =async(req:AuthenticatedRequest, res:Response)=>{
     try {
-        const {user_id,title, description, status, completedAt}= req.body
-
+        const {title, description, status, completedAt}= req.body
+        const {id} = req.payload
         const newToDo = new toDoModel({
-            user_id,
+            user_id:id,
             title,
             description,
             status:status|| 'Pending',
@@ -29,10 +32,12 @@ export const createToDoController =async(req:Request, res:Response)=>{
 }
 
 
-export const getAllToDoController = async(req:Request, res:Response)=>{
+export const getAllToDoController = async(req:AuthenticatedRequest, res:Response)=>{
     try {
+        const {id} = req.payload
+        const toDoList = await toDoModel.find({user_id:id})
 
-        const toDoList = await toDoModel.find()
+    
         return res.status(200).json({
             status:200,
             message:'Task list fetched sucessfully',
@@ -46,10 +51,10 @@ export const getAllToDoController = async(req:Request, res:Response)=>{
     }
 }
 
-export const getToDobyIdController = async(req:Request, res:Response)=>{
+export const getToDobyIdController = async(req:AuthenticatedRequest, res:Response)=>{
     try {
         const {id} = req.params
-        const ToDo = getTodo(id)
+        const ToDo = await getTodo(id)
         if(!ToDo){
             return res.status(400).json({
                 status:400,
@@ -66,74 +71,92 @@ export const getToDobyIdController = async(req:Request, res:Response)=>{
         console.log(error);
     }
 }
-export const updateTaskController = async(req:Request, res:Response)=>{
+
+
+
+
+export const updateTaskController = async (req: Request, res: Response) => {
     try {
-        const {id} = req.params
-        const {user_id,  title, description, status, completedAt, updatedAt}= req.body
-        if(status==='Completed'){
-            return res.status(200).json({
-                status:200,
-                message:'Task already completed'
-            })
+        const { id } = req.params;
+        const { user_id, title, description, status, completedAt, updatedAt } = req.body;
 
+        const existingTask = await toDoModel.findById(id);
+        if (!existingTask) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Task not found'
+            });
         }
-    
-    
-        const updateTask = await toDoModel.findByIdAndUpdate({
-            id, 
-            title,
-            description,
-            status,
-            completedAt,
-            updatedAt:Date.now()
-        },
-        { new: true, runValidators: true }
-    )
-    return res.status(200).json({
-        status:200,
-        message:'Task updated sucessfully',
-        body:updateTask
-    })
-    } catch (error) {
-        errorHandler(error, req, res)
-        console.log(error);
-    }
-}
 
-
-export const updateTaskStatusController=async(req:Request, res:Response)=>{
-    try {
-        const {id} = req.params
-        const {status}= req.body
-        if(status === 'Completed'){
+        if (existingTask.status === 'Completed') {
             return res.status(200).json({
-                status:200,
-                message:'Task already completed'
-            })
+                status: 200,
+                message: 'Task already completed'
+            });
         }
-        
-        const updatedTaskStatus = await toDoModel.findByIdAndUpdate({
+
+        // Update the task details
+        const updatedTask = await toDoModel.findByIdAndUpdate(
             id,
-            status
-        })
+            {
+                title,
+                description,
+                status,
+                completedAt: status === 'Completed' ? Date.now() : completedAt,
+                updatedAt: Date.now()
+            },
+            { new: true, runValidators: true }
+        );
 
         return res.status(200).json({
-            status:200,
-            message:'Task status updated sucessfully'
-        ,
-        body: updatedTaskStatus
-        })
+            status: 200,
+            message: 'Task updated successfully',
+            body: updatedTask
+        });
     } catch (error) {
-        errorHandler(error, req, res)
+        errorHandler(error, req, res);
         console.log(error);
     }
-}
+};
+
+
+
+export const updateTaskStatusController = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const task = await toDoModel.findById(id);
+        if (!task) {
+            return res.status(404).json({ status: 404, message: 'Task not found' });
+        }
+
+        if (task.status === 'Completed') {
+            return res.status(200).json({
+                status: 200,
+                message: 'Task already completed'
+            });
+        }
+
+        task.status = status;
+        const updatedTaskStatus = await task.save();
+
+        return res.status(200).json({
+            status: 200,
+            message: 'Task status updated successfully',
+            body: updatedTaskStatus
+        });
+    } catch (error) {
+        errorHandler(error, req, res);
+        console.log(error);
+    }
+};
 
 export const deleteToDoController = async(req:Request, res:Response)=>{
     try {
         const {id}= req.params
 
-        const deleteTask =  deleteTodoById(id)
+        const deleteTask =   await deleteTodoById(id)
         if(!deleteTask){
             return res.status(400).json({
                 status:400,
@@ -147,6 +170,8 @@ export const deleteToDoController = async(req:Request, res:Response)=>{
             body:deleteTask
         })
     } catch (error) {
+        errorHandler(error, req, res)
+        console.log(error);
         
     }
 }

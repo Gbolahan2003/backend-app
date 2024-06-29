@@ -5,16 +5,18 @@ import BodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
 import compression from 'compression'
 import cors from 'cors'
+import db from 'mongoose'
 import mongoose from 'mongoose'
 import { error } from 'console'
 import dotenv from 'dotenv'
 import crypto from  'crypto'
-import { RegisterRouter, createRouter, logInRouter, post, post2, userRouter } from './router/authRouter'
-import { measureExcustionTime, randomNumbers } from './helpers'
+import { RegisterRouter, createRouter, logInRouter, userRouter } from './router/authRouter'
+// import { measureExcustionTime, random, randomNumbers } from './helpers'
 import { isAuthenticated } from './middlewares'
+import { getUserBySessionToken } from './db/users'
 
 
-const randomized = randomNumbers()
+// const randomized = randomNumbers()
 const userName = process.env.USER_NAME
 const password = process.env.PASSWORD
 
@@ -45,6 +47,7 @@ const port = 8080
 
 
 const mongo_URL = `mongodb+srv://${userName}:${password}@cluster0.muwjhfn.mongodb.net/`
+
 
 mongoose.Promise = Promise
 

@@ -1,70 +1,96 @@
-import { get, identity, merge } from "lodash";
- import {getUserBySessionToken} from '../db/users'
- import express,{Request, Response,NextFunction} from 'express'
- import jwt from "jsonwebtoken";
-import { error } from "console";
+import { get, merge } from "lodash";
+import { getUserBySessionToken, getUsersById } from '../db/users';
+import express, { Request, Response, NextFunction } from 'express';
+import JWT from "jsonwebtoken";
+import { errorHandler } from "../helpers/errorHandler";
 import { userData } from "../interface";
+import { extractUserDetailsFromToken } from "../helpers";
+import { getUserById } from "../controllers/userController";
+import { toDoModel } from "../db/toDoList";
+import { error } from "console";
+
+export interface AuthenticatedRequest extends Request {
+    payload?: any;
+    identity?: { _id: string };
+    users?:any
+  
+}
+const secretKey = process.env.JWT_SECRET || '';
 
 
 
-const secretKey = process.env.JWT_SECRET||''
-export const isOwner = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+export const isAuthenticated =async(req:AuthenticatedRequest, res:Response, next:NextFunction)=>{
+    const session = req.cookies['session']
+
     try {
-        const { id } = req.params;
-        const currentUserId = get(req, 'identity._id')
-
-        if (typeof currentUserId !== 'string'|| currentUserId !== id) {
+        if(!session){
             return res.status(403).json({
-                status: 403,
-                error: 'You are not authorized to perform this action'
-            });
+                status:403,
+                error:'Invalid request: No token provided'
+            })
         }
+        const user = extractUserDetailsFromToken(session)
+
+        if(!user){
+            return res.status(400).json({
+                status:400,
+                error:'User does not exist '
+            })
+        }
+        
+        
+        const existingUser =  await getUsersById(user.id)
+
+        req.payload = existingUser
+
+        merge(req, { identity: existingUser });
+        next()
+        
+    } catch (error) {
+        errorHandler(error, req, res)
+    }
+}
+
+export const isOwner = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.payload;
+        const currentUserId = get(req, 'identity._id');
+
+        console.log('Payload ID:', id);
+        console.log('Current User ID:', currentUserId);
+
+        if (!currentUserId || currentUserId.toString() !== id.toString()) {
+            return res.status(403).json({ status: 403, error: 'You are not authorized to perform this action' });
+        }
+
         next();
     } catch (error) {
         console.error('Authorization error:', error);
-        return res.status(500).json({
-            status: 500,
-            error: 'An unexpected error occurred'
-        });
+        return res.status(500).json({ status: 500, error: 'An unexpected error occurred' });
     }
 };
- export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-  
-    if (token == null) {
-      return res.sendStatus(401); // No token, unauthorized
-    }
-  
-    jwt.verify(token, secretKey, (err, decoded) => {
-      if (err) {
-        return res.sendStatus(403); // Invalid token, forbidden
-      }
-    //   req.user = decoded as userData// Assign decoded payload to req.user
-      next(); // Proceed to the next middleware or route handler
-    });
-  };
-  
 
- export const isAuthenticated =async(req:express.Request, res:express.Response, next:express.NextFunction)=>{
+
+export const taskOwner = async(req:AuthenticatedRequest, res:Response, next:NextFunction)=>{
+
+    const {id} = req.params
+    const currentUserId = get(req, 'identity._id')
     try {
-      const sessionToken = req.cookies['session']
-      const existingUser = getUserBySessionToken(sessionToken)
+        if(!currentUserId){
+            return res.status(403).json({ status: 403, error: 'You are not authorized to perform this action' });
+        }
+        const task = await toDoModel.findById(id)
+        if (!task) {
+            return res.status(404).json({ status: 404, error: 'Task not found' });
+        }
 
-      if(!sessionToken || !existingUser){
-        return res.status(403).json({
-            status:'403',
-            error:'Unauthorized request'
-        })
-      }
-      merge(req, {identity:existingUser})
-        return next()
-    } catch (error) {
-        console.log(error);
-    return res.status(500).json({
-        status:'500',
-        message:'there is an error'
-    })
+        if(task.user_id.toString() !== currentUserId.toString()){
+            return res.status(403).json({ status: 403, error: 'You are not authorized to perform this action' });
+
+        }
+        next()
         
+    } catch (error) {
+        errorHandler(error, req, res)
     }
- }
+}
