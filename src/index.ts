@@ -11,7 +11,6 @@ import { error } from 'console'
 import dotenv from 'dotenv'
 import crypto from  'crypto'
 import { RegisterRouter, createRouter, logInRouter, userRouter } from './router/authRouter'
-// import { measureExcustionTime, random, randomNumbers } from './helpers'
 import { isAuthenticated } from './middlewares'
 import { getUserBySessionToken } from './db/users'
 
