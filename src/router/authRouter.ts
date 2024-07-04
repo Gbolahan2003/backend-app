@@ -1,5 +1,5 @@
 import express from 'express'
-import { logInController, refreshTokenController, registerController } from '../controllers/authentication'
+import { logInController, refreshTokenController, registerController, testController } from '../controllers/authentication'
 import { deleteUserController, getUserById, getUsersController } from '../controllers/userController'
 import { isAuthenticated, isOwner, taskOwner } from '../middlewares'
 import { deleteUserById } from '../db/users'
@@ -19,7 +19,7 @@ router.post('/auth/sign-up', registerController);
 router.post('/refreshToken', isAuthenticated, refreshTokenController)
 
 // Test Routes
-// router.get('/test/testing', testController);
+router.get('/test', testController);
 // router.get('/test/second', testController2);
 
 // User Routes

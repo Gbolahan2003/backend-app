@@ -168,3 +168,17 @@ export const refreshTokenController = async (req: express.Request, res: express.
         console.log(error);
     }
 };
+
+
+
+export const testController =async(req:express.Request, res:express.Response)=>{
+     try {
+        return res.status(200).json({
+            status:200,
+            message:'this is for testing'
+        })
+     } catch (error) {
+        
+     }
+
+}
