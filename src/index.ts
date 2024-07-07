@@ -28,9 +28,14 @@ const router = createRouter()
 dotenv.config()
 
 
+const CORS_Options ={
+    origin:'https://to-do-jdxn.onrender.com',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+}
 
 app.use(cookieParser())
-app.use(cors({}))
+app.use(cors(CORS_Options))
 app.use(compression())
 app.use(BodyParser.json())
 app.use(router)
