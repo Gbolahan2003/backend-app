@@ -19,6 +19,7 @@ const secretKey = process.env.JWT_SECRET || '';
 
 
 
+
 export const isAuthenticated =async(req:AuthenticatedRequest, res:Response, next:NextFunction)=>{
     const session = req.cookies['session']
 
