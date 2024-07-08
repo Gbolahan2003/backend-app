@@ -66,11 +66,7 @@ export const registerController = async (req: express.Request, res: express.Resp
             }
         }).end();
     } catch (error: any) {
-        console.error(error);
-        return res.status(400).json({
-            status: '400',
-            message: error.message || 'Error occurred'
-        });
+   errorHandler(error, req, res)
     }
 };
 
@@ -127,11 +123,7 @@ export const logInController = async (req: express.Request, res: express.Respons
             }
         }).end();
     } catch (error: any) {
-        console.error(error);
-        return res.status(500).json({
-            status: '500',
-            message: error.message || 'Error occurred'
-        });
+     errorHandler(error, req,res)
     }
 };
 
