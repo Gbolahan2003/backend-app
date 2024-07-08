@@ -29,8 +29,8 @@ dotenv.config()
 
 
 const CORS_Options ={
-    origin:'*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin:["*"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
 }
 
