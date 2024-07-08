@@ -27,9 +27,10 @@ const app = express()
 const router = createRouter()
 dotenv.config()
 
+const string  = 'xfguikjbvfgyujajyuiskfjhdjw'
 
 const CORS_Options:CorsOptions ={
-    origin:["*"],
+    origin:"http://localhost:3000",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
 }
