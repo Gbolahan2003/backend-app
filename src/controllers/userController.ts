@@ -79,10 +79,9 @@ export const getUserById =async(req:authRequest, res:express.Response)=>{
 
         return res.status(200).json({
             status:200,
-            body:{
-                user
-            }
-        })
+            body:user
+        }
+        )
     } catch (error:any) {
         errorHandler(error, req, res)
         console.log(error);

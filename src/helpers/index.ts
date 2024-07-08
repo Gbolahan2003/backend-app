@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
+import { userData } from '../interface'
 
 dotenv.config()
 
@@ -56,3 +57,12 @@ export const extractUserDetailsFromToken = (token: string) => {
         throw new Error('Invalid token');
     }
 };
+
+export const parseError = (err:any) => {
+    if (err.isJoi) return err.details[0];
+    return JSON.stringify(err, Object.getOwnPropertyNames(err));
+  };
+  export const sessionizeUser = (user:userData) => {
+    return { userId: user._id, username: user.firstName, email:user.email };
+  }
+  
