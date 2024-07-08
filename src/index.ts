@@ -13,7 +13,7 @@ import crypto from  'crypto'
 import { RegisterRouter, createRouter, logInRouter, userRouter } from './router/authRouter'
 import { isAuthenticated } from './middlewares'
 import { getUserBySessionToken } from './db/users'
-
+import { CorsOptions } from 'cors'
 
 // const randomized = randomNumbers()
 const userName = process.env.USER_NAME
@@ -28,7 +28,7 @@ const router = createRouter()
 dotenv.config()
 
 
-const CORS_Options ={
+const CORS_Options:CorsOptions ={
     origin:["*"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
