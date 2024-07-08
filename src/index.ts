@@ -29,7 +29,7 @@ dotenv.config()
 
 
 const CORS_Options ={
-    origin:'https://to-do-jdxn.onrender.com',
+    origin:'*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
 }
