@@ -3,7 +3,7 @@ import { getUserBySessionToken, getUsersById } from '../db/users';
 import express, { Request, Response, NextFunction } from 'express';
 import JWT from "jsonwebtoken";
 import { errorHandler } from "../helpers/errorHandler";
-import { userData } from "../interface";
+import { user, userData } from "../interface";
 import { extractUserDetailsFromToken } from "../helpers";
 import { getUserById } from "../controllers/userController";
 import { toDoModel } from "../db/toDoList";
@@ -19,35 +19,32 @@ const secretKey = process.env.JWT_SECRET || '';
 
 
 
-
 export const isAuthenticated =async(req:AuthenticatedRequest, res:Response, next:NextFunction)=>{
-    const session = req.cookies['session']
+    // const session = req.cookies['session']
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({
+          status: 401,
+          message: 'Unauthorized: Bearer token missing or invalid'
+        });
+      }
+    
 
-    try {
-        if(!session){
-            return res.status(403).json({
-                status:403,
-                error:'Invalid request: No token provided'
-            })
-        }
-        const user = extractUserDetailsFromToken(session)
+        // const user = extractUserDetailsFromToken(session)
+    const token = authHeader.split(' ')[1]
 
-        if(!user){
-            return res.status(400).json({
-                status:400,
-                error:'User does not exist '
-            })
-        }
+        try{
+            const decoded = JWT.verify(token, secretKey) as {id:string}
         
-        
-        const existingUser =  await getUsersById(user.id)
 
-        req.payload = existingUser
-
-        merge(req, { identity: existingUser });
-        next()
-        
-    } catch (error) {
+            const existingUser =  await getUsersById(decoded.id)
+    
+            req.payload = existingUser
+    
+            merge(req, { identity: existingUser });
+            next()
+            
+        }catch (error) {
         errorHandler(error, req, res)
     }
 }

@@ -21,8 +21,15 @@ import { todo } from "node:test";
         type:Date,
         default:Date.now
     },
-    completedAt:{
+    start:{
         type:Date
+    },
+    end:{
+        type:Date
+    },
+    completedAt:{
+        type:Date,
+
     },
     updatedAt:{
         type:Date,

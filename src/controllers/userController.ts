@@ -1,5 +1,5 @@
-import express,{Request} from 'express';
-import { createUser, deleteUserById, getUserBySessionToken, getUsers, getUsersByEmail, getUsersById } from '../db/users';
+import express,{Request, Response} from 'express';
+import { createUser, deleteUserById, getUserBySessionToken, getUsers, getUsersByEmail, getUsersById, userModel } from '../db/users';
 // import { authentication, random } from '../helpers';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
@@ -89,3 +89,12 @@ export const getUserById =async(req:authRequest, res:express.Response)=>{
         
     }
 }
+
+export const userController = async (req: Request, res: Response) => {
+    // try {
+    //   const user = await userModel.findById(req.session.userId).select('-password');
+    //   res.status(200).json(user);
+    // } catch (error) {
+    //   errorHandler(error, req, res);
+    // }
+  };

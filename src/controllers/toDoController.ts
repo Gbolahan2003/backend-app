@@ -8,12 +8,14 @@ interface AuthenticatedRequest extends Request {
 
 export const createToDoController =async(req:AuthenticatedRequest, res:Response)=>{
     try {
-        const {title, description, status, completedAt}= req.body
+        const {title, description, status, end, start, completedAt}= req.body
         const {id} = req.payload
         const newToDo = new toDoModel({
             user_id:id,
             title,
             description,
+            start,
+            end,
             status:status|| 'Pending',
             completedAt:status==='Completed'?completedAt||Date.now():undefined
             
@@ -78,7 +80,7 @@ export const getToDobyIdController = async(req:AuthenticatedRequest, res:Respons
 export const updateTaskController = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { user_id, title, description, status, completedAt, updatedAt } = req.body;
+        const { user_id, title, description, status, completedAt, updatedAt, start, end } = req.body;
 
         const existingTask = await toDoModel.findById(id);
         if (!existingTask) {
@@ -102,7 +104,8 @@ export const updateTaskController = async (req: Request, res: Response) => {
                 title,
                 description,
                 status,
-                completedAt: status === 'Completed' ? Date.now() : completedAt,
+                start,
+                end: status === 'Completed' ? Date.now() : completedAt,
                 updatedAt: Date.now()
             },
             { new: true, runValidators: true }

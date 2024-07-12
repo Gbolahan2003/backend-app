@@ -1,6 +1,6 @@
 import express from 'express'
-import { logInController, refreshTokenController, registerController, testController } from '../controllers/authentication'
-import { deleteUserController, getUserById, getUsersController } from '../controllers/userController'
+import { logInController, logoutController, refreshTokenController, registerController, testController } from '../controllers/authentication'
+import { deleteUserController, getUserById, getUsersController, userController } from '../controllers/userController'
 import { isAuthenticated, isOwner, taskOwner } from '../middlewares'
 import { deleteUserById } from '../db/users'
 import { createToDoController, deleteToDoController, getAllToDoController, getToDobyIdController, updateTaskController, updateTaskStatusController } from '../controllers/toDoController'
@@ -16,6 +16,7 @@ export const createRouter=()=>{
 //auth
 router.post('/auth/login', logInController);
 router.post('/auth/sign-up', registerController);
+router.delete('/auth/logout', isAuthenticated, isOwner, logoutController)
 router.post('/refreshToken', isAuthenticated, refreshTokenController)
 
 // Test Routes
@@ -26,6 +27,7 @@ router.get('/test', testController);
 router.get('/user/users',  isAuthenticated, getUsersController);
 router.delete('/user/:id' , isAuthenticated , isOwner, deleteUserController)
 router.get('/user', isAuthenticated, getUserById )
+router.get('/user2', userController)
 
 
 //toDo controller
@@ -39,3 +41,5 @@ router.delete('/task/:id',isAuthenticated, taskOwner, deleteToDoController)
 
 return router;
 }
+
+

@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { createUser, getUsersByEmail, userModel } from '../db/users';
 import { authentication, generateAccessToken, generaterefreshToken, random } from '../helpers';
 import jwt from 'jsonwebtoken';
@@ -7,8 +7,8 @@ import { errorHandler } from '../helpers/errorHandler';
 
 dotenv.config();
 
-const JWT_SECRET = process.env.JWT_SECRET || '';
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || '';
+const { PASSWORD, USER_NAME, JWT_SECRET, REFRESH_TOKEN_SECRET, SESSION_NAME, SESSION_LIFETIME, NODE_ENV, SESSION_SECRET } = process.env;
+
 
 export const registerController = async (req: express.Request, res: express.Response) => {
     try {
@@ -43,9 +43,8 @@ export const registerController = async (req: express.Request, res: express.Resp
             }
         });
 
-        const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '10h' });
+        const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET||'', { expiresIn: '10h' });
         const refreshToken = generaterefreshToken({ id: user._id, email: user.email });
-
         user.authentication.sessionToken = token;
         user.authentication.refreshToken = refreshToken;
         await user.save();
@@ -98,14 +97,14 @@ export const logInController = async (req: express.Request, res: express.Respons
         }
 
         const salt = random();
-        const sessionToken = authentication(salt, user._id.toString());
-        user.authentication.sessionToken = sessionToken;
-
+        // const sessionToken = authentication(salt, user._id.toString());
+        
         const refreshToken = generaterefreshToken({ id: user._id, email: user.email });
+        const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET ||'', { expiresIn: '10h' });
+        user.authentication.sessionToken = token;
         user.authentication.refreshToken = refreshToken;
         await user.save();
 
-        const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '10h' });
         res.cookie('session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', domain: 'localhost' });
 
         return res.status(200).json({
@@ -134,7 +133,7 @@ export const refreshTokenController = async (req: express.Request, res: express.
             return res.status(401).json({ message: 'Refresh token is required' });
         }
 
-        const payload = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as any;
+        const payload = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET || '') as any;
         const user = await userModel.findById(payload.id);
         if (!user || user.authentication?.refreshToken !== refreshToken) {
             return res.status(403).json({ message: 'Invalid refresh token' });
@@ -174,3 +173,24 @@ export const testController =async(req:express.Request, res:express.Response)=>{
      }
 
 }
+
+export const logoutController = async (req: Request, res: Response) => {
+    try {
+        req.session.destroy((err) => {
+            if (err) {
+                return errorHandler(err, req, res);
+            }
+            
+            if(SESSION_NAME){
+                res.clearCookie(SESSION_NAME);
+            } 
+            res.status(200).json({
+                status: 200,
+                message: 'Logout successful'
+            });
+        });
+    } catch (error) {
+        errorHandler(error, req, res);
+        console.log(error);
+    }
+};
