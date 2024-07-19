@@ -25,7 +25,17 @@ const app = express();
 const router = createRouter();
 
 const CORS_Options: CorsOptions = {
-    origin: ["https://task-app-wheat-five.vercel.app"],
+    origin: function (origin:any, callback) {
+        const allowedOrigins = [
+            "https://to-do-sigma-two.vercel.app",
+            "http://localhost:3000"
+        ];
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 };
 
