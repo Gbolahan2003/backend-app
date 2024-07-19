@@ -8,7 +8,7 @@ interface AuthenticatedRequest extends Request {
 
 export const createToDoController =async(req:AuthenticatedRequest, res:Response)=>{
     try {
-        const {title, description, status, end, start, completedAt}= req.body
+        const {title, description, status, end, start, completedAt, date}= req.body
         const {id} = req.payload
         const newToDo = new toDoModel({
             user_id:id,
@@ -16,7 +16,8 @@ export const createToDoController =async(req:AuthenticatedRequest, res:Response)
             description,
             start,
             end,
-            status:status|| 'Pending',
+            date,
+            status,
             completedAt:status==='Completed'?completedAt||Date.now():undefined
             
         })
@@ -80,7 +81,7 @@ export const getToDobyIdController = async(req:AuthenticatedRequest, res:Respons
 export const updateTaskController = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { user_id, title, description, status, completedAt, updatedAt, start, end } = req.body;
+        const { user_id, title, description, status, completedAt, date,start, end } = req.body;
 
         const existingTask = await toDoModel.findById(id);
         if (!existingTask) {
@@ -105,7 +106,8 @@ export const updateTaskController = async (req: Request, res: Response) => {
                 description,
                 status,
                 start,
-                end: status === 'Completed' ? Date.now() : completedAt,
+                date,
+                end: status === 'Completed' ? Date.now() : end,
                 updatedAt: Date.now()
             },
             { new: true, runValidators: true }
@@ -121,7 +123,6 @@ export const updateTaskController = async (req: Request, res: Response) => {
         console.log(error);
     }
 };
-
 
 
 export const updateTaskStatusController = async (req: Request, res: Response) => {
@@ -141,8 +142,17 @@ export const updateTaskStatusController = async (req: Request, res: Response) =>
             });
         }
 
-        task.status = status;
-        const updatedTaskStatus = await task.save();
+        const updateFields: { status: string; completedAt?: Date } = { status };
+
+        if (status === 'Completed') {
+            updateFields.completedAt = new Date();
+        }
+
+        const updatedTaskStatus = await toDoModel.findByIdAndUpdate(id, updateFields, { new: true });
+
+        if (!updatedTaskStatus) {
+            return res.status(500).json({ status: 500, message: 'Failed to update task status' });
+        }
 
         return res.status(200).json({
             status: 200,
@@ -154,6 +164,7 @@ export const updateTaskStatusController = async (req: Request, res: Response) =>
         console.log(error);
     }
 };
+
 
 export const deleteToDoController = async(req:Request, res:Response)=>{
     try {
@@ -169,7 +180,7 @@ export const deleteToDoController = async(req:Request, res:Response)=>{
 
         return res.status(200).json({
             status:200,
-            message:'Task deletd sucessfully',
+            message:'Task deleted sucessfully',
             body:deleteTask
         })
     } catch (error) {

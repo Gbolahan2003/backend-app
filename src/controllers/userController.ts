@@ -31,19 +31,8 @@ export const getUsersController =async(req:express.Request, res:express.Response
         )
         
     } catch (error:any) {
-        console.error(error)
-        if(error.message){
-            return res.status(400).json({
-                status:'400',
-                error:error.message
-            }) 
-        }
-            return res.status(400).json({
-                status:'400',
-                error:'there is an error'
-            }) 
-        
-
+        console.log(error);
+        errorHandler(error, req, res)
     }
 }
 
@@ -53,7 +42,8 @@ try {
     const deleteUser = await deleteUserById(id)
     return res.json({
         status:200,
-        message:'user deleted sucessfully'
+        message:'user deleted sucessfully',
+        body:deleteUser
     })
 } catch (error) {
     console.log(error);

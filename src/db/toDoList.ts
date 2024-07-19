@@ -17,19 +17,23 @@ import { todo } from "node:test";
         type:String,
         default:'Pending'
     },
+    date:{
+        type:Date
+    },
     createdAt:{
         type:Date,
         default:Date.now
     },
     start:{
-        type:Date
+        type:String,
+        required:true
     },
     end:{
-        type:Date
+        type:String,
+        required:true
     },
     completedAt:{
-        type:Date,
-
+        type:Date
     },
     updatedAt:{
         type:Date,
