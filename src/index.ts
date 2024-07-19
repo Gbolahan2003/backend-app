@@ -25,7 +25,7 @@ const app = express();
 const router = createRouter();
 
 const CORS_Options: CorsOptions = {
-    origin: ["http://localhost:3000"],
+    origin: ["https://task-app-wheat-five.vercel.app"],
     credentials: true,
 };
 
