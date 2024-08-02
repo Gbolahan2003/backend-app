@@ -1,9 +1,10 @@
 import express from 'express'
-import { logInController, logoutController, refreshTokenController, registerController, testController } from '../controllers/authentication'
+import { logInController, logoutController, refreshTokenController, registerController } from '../controllers/authentication'
 import { deleteUserController, getUserById, getUsersController, userController } from '../controllers/userController'
 import { isAuthenticated, isOwner, taskOwner } from '../middlewares'
 import { deleteUserById } from '../db/users'
 import { createToDoController, deleteToDoController, getAllToDoController, getToDobyIdController, updateTaskController, updateTaskStatusController } from '../controllers/toDoController'
+import { createTestController, getTestByIdController, getTestController, updateTestController } from '../controllers/testController'
 
 const router = express.Router()
 
@@ -20,7 +21,10 @@ router.delete('/auth/logout', isAuthenticated, isOwner, logoutController)
 router.post('/refreshToken', isAuthenticated, refreshTokenController)
 
 // Test Routes
-router.get('/test', testController);
+router.get('/test', getTestController);
+router.get('/test/:id', getTestByIdController)
+router.post('/test', createTestController)
+router.put('/test/:id', updateTestController)
 // router.get('/test/second', testController2);
 
 // User Routes

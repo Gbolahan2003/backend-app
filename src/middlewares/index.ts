@@ -22,7 +22,7 @@ const secretKey = process.env.JWT_SECRET || '';
 export const isAuthenticated =async(req:AuthenticatedRequest, res:Response, next:NextFunction)=>{
     // const session = req.cookies['session']
     const authHeader = req.headers.authorization
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith('Bearer')) {
         return res.status(401).json({
           status: 401,
           message: 'Unauthorized: Bearer token missing or invalid'
