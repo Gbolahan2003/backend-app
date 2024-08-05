@@ -9,6 +9,7 @@ export const getTestController =async(req:express.Request, res:express.Response)
     try {
        const test = await testModel.find()
        return res.status(200).json({
+        status:'fuck u',
         body:test
        })
     } catch (error) {
@@ -92,3 +93,11 @@ export const getTestByIdController = async(req:express.Request, res:express.Resp
         
     }
 }
+
+const acceot =(string:string)=>{
+
+}
+function accept (string:string){
+
+}
+

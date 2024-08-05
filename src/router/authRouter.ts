@@ -8,10 +8,10 @@ import { createTestController, getTestByIdController, getTestController, updateT
 
 const router = express.Router()
 
-export const logInRouter = router.post('/login', logInController)
+// export const logInRouter = router.post('/login', logInController)
 
-export const RegisterRouter = router.post('/sign-up', registerController)
-export const userRouter = router.get('/users',  getUsersController)
+// export const RegisterRouter = router.post('/sign-up', registerController)
+// export const userRouter = router.get('/users',  getUsersController)
 
 export const createRouter=()=>{
 //auth
@@ -24,7 +24,7 @@ router.post('/refreshToken', isAuthenticated, refreshTokenController)
 router.get('/test', getTestController);
 router.get('/test/:id', getTestByIdController)
 router.post('/test', createTestController)
-router.put('/test/:id', updateTestController)
+router.patch('/test/:id', updateTestController)
 // router.get('/test/second', testController2);
 
 // User Routes
